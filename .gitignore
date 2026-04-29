@@ -1,0 +1,17 @@
+# Cache / scratch
+.cache/
+__pycache__/
+*.pyc
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Experiment outputs (commit only after curation)
+experiments/*/results.tsv
+experiments/*/checkpoints/
+experiments/*/wandb/
+experiments/*/.scratch/
+
+# Local credentials
+.env

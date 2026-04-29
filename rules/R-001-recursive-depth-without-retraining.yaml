@@ -1,0 +1,54 @@
+---
+id: R-001
+name: recursive_depth_without_retraining
+type: first-principle
+status: draft
+created_at: 2026-04-29
+created_by: user-sample
+
+statement: |
+  Recurrent depth in language models can be expanded WITHOUT retraining
+  if and only if the hidden state has a contractive Lipschitz fixed-point
+  structure under iterated layer application. Adding depth to a non-contractive
+  model breaks output coherence; to a contractive model, it just sharpens
+  the fixed point.
+
+origin:
+  source: first-principles
+  trigger_question: |
+    "MoR/PonderNet/ACT all retrain to add depth. Is retraining structurally
+    necessary, or is it a side-effect of the model not having the right
+    contraction property?"
+
+falsifier:
+  testable_prediction: |
+    Take a frozen pretrained transformer. Apply layer L_n iteratively k times
+    (k ∈ {1, 2, 4, 8}) on a calibration set. Measure spectral norm of the
+    Jacobian J = ∂h_{t+1}/∂h_t at the post-application hidden state.
+    Prediction: models that maintain perplexity at k=8 have ‖J‖₂ < 1
+    (contractive); models that explode have ‖J‖₂ > 1.
+  five_min_kill: |
+    Single-GPU. Llama-3-8B + 100 prompts from PILE. Compute Jacobian spectral
+    norm via finite difference (h+ε). 5 min total. If correlation between
+    ‖J‖₂ and Δperplexity at k=8 is r < 0.5, rule is falsified.
+
+scope:
+  applicable_domains: [LLM, transformers, recurrent-models]
+  excluded_domains: [vision-CNN, GAN, diffusion]   # different stability theory
+
+provenance:
+  derived_from: first-principles  # contraction mapping theorem
+  conflicts_with:
+    - "@bae2025mixture"             # MoR — retrains to add depth, doesn't check Lipschitz
+    - "@graves2016adaptive"         # ACT — same
+  related_to:
+    - "@banach"                     # Banach fixed-point theorem (math)
+
+# Below: filled by /v4-rule-* commands
+first_principles: []         # /v4-rule-decompose
+candidate_datasets: []       # /v4-rule-locate
+feasibility:
+  status: pending            # /v4-rule-feasibility
+
+# After verification:
+# verification: ...          # /v4-experiment-verify

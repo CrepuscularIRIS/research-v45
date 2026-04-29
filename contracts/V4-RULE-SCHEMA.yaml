@@ -1,0 +1,53 @@
+---
+# V4 Rule Schema (canonical) — version 1.0.0
+#
+# Every rule yaml in ~/research/v4/rules/R-XXX-<name>.yaml MUST conform.
+# Validator: ~/.hermes/scripts/v4-rule-validate.py (TODO)
+
+schema_version: "1.0.0"
+
+required_top_level:
+  - id              # R-001, R-002, ...
+  - name            # snake-case ≤30 chars
+  - type            # enum
+  - status          # enum
+  - statement       # 2-3 sentences
+  - falsifier       # nested
+  - scope           # nested
+
+enums:
+  type:
+    - first-principle           # 来自数学/物理/CS 第一性原理推导
+    - constitution-clause       # 来自 rgmare constitution v0.1.0 的某条 R
+    - module-design             # 关于具体模块设计的优化原则
+    - optimization-axiom        # 优化器/训练动力学相关的公理
+    - cross-domain-transfer     # 从 A 领域迁移到 B 领域的迁移规则
+
+  status:
+    - draft                     # 刚加入,还没 decompose
+    - decomposed                # Gemini 第一性原理拆解完成
+    - located                   # Opus + Scholar 定位 dataset 完成
+    - feasibility-checked       # Codex audit 完成
+    - planning                  # 实验 plan 写好
+    - executing                 # train.py 在跑
+    - verified                  # 实验证实
+    - falsified                 # 实验证伪 (这也是一个有价值的产出)
+    - deferred                  # feasibility NO-GO,延后
+
+stage_to_engine:
+  decompose: gemini-3-pro-preview
+  locate: claude-opus-4-7        # uses mcp__scholar__scholar_search_top
+  feasibility: gpt-5.4            # codex-academic
+  plan: claude-sonnet-4-6
+  run: claude-sonnet-4-6          # superpowers test-driven-development + verification-before-completion
+  verify: claude-opus-4-7
+
+required_fields_per_status:
+  draft: [id, name, type, statement, falsifier.testable_prediction]
+  decomposed: ["+first_principles"]
+  located: ["+candidate_datasets"]
+  feasibility-checked: ["+feasibility.status"]
+  planning: ["+experiments/<id>/plan.md exists"]
+  executing: ["+experiments/<id>/train.py exists"]
+  verified: ["+experiments/<id>/verify.md exists with verdict=verified"]
+  falsified: ["+experiments/<id>/verify.md exists with verdict=falsified"]
